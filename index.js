@@ -96,7 +96,7 @@ app.get("/dashboard", authentication, async (req, res) => {
         let response = await axios.get(`https://api.spacexdata.com/v3/capsules?type=${searcher.type}&original_launch=${searcher.original_launch}&status=${searcher.status}`)
         console.log(response)
         res.send(response.data);
-    } catch (err) {
+    } catch (err) {///
         ////
         res.status(500).send("Error retrieving data from API.");
     }////
