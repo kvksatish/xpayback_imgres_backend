@@ -97,7 +97,7 @@ app.get("/dashboard", authentication, async (req, res) => {
         console.log(response)
         res.send(response.data);
     } catch (err) {
-
+        ////
         res.status(500).send("Error retrieving data from API.");
     }
 
