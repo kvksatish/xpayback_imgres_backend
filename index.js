@@ -7,13 +7,21 @@ const passwordValidator = require('password-validator');
 const validator = require('validator');
 const cors = require('cors');
 const authentication = require("./Middleware/authentication.js");
+const cloudinary = require("./cloudinary.js");
 const { default: axios } = require("axios");
 
 const app = express()
 
+
 require("dotenv").config()
 app.use(express.json())
 app.use(cors());
+
+const multer = require('multer');
+const { ImagesModel } = require("./Models/ImagesData.js");
+const storage = multer.memoryStorage();
+
+const upload = multer({ storage: storage }).single('image');
 
 app.get("/", (req, res) => {
     res.send("welcome")
@@ -87,21 +95,52 @@ app.post("/signup", async (req, res) => {
 
 
 
-app.get("/dashboard", authentication, async (req, res) => {
-    // console.log(req.query)
+app.post("/dashboard", authentication, async (req, res) => {
+    const { image, email } = req.body
+    // console.log(email)
     try {
-        // Hash the password
-        const searcher = req.query;
-        console.log(searcher.type, "sdhjdghjn")
-        let response = await axios.get(`https://api.spacexdata.com/v3/capsules?type=${searcher.type}&original_launch=${searcher.original_launch}&status=${searcher.status}`)
-        console.log(response)
-        res.send(response.data);
-    } catch (err) {///
-        ////
-        res.status(500).send("Error retrieving data from API.");
-    }////
+        console.log("1")
+        const result1 = await cloudinary.uploader.upload(image, {
+            folder: "resimgs"
+        })
+        console.log("2")
+        const result2 = await cloudinary.uploader.upload(image, {
+            folder: "resimgs",
+            width: 100,
+            crop: "scale"
+        })
+        console.log("3")
+        const result3 = await cloudinary.uploader.upload(image, {
+            folder: "resimgs",
+            width: 300,
+            crop: "scale"
+        })
+        const imglinks = new ImagesModel({ email, imgslinks: [result2, result3, result1] });
+
+        // Save the user to the database
+        await imglinks.save();
+        console.log(result1, result2, result3, "4")
+        res.send({ result1, result2, result3 });
 
 
+    } catch (err) {
+        console.error(err, "error");
+        res.status(500).send("Error uploading file");
+    }
+});
+
+app.get("/getallimgs", authentication, async (req, res) => {
+    const { email } = req.body
+    // console.log(email)
+    try {
+        let imglinks = await ImagesModel.find({ email })
+        res.send(imglinks);
+
+
+    } catch (err) {
+        console.error(err, "error");
+        res.status(500).send("Error uploading file");
+    }
 });
 
 
